@@ -1,15 +1,16 @@
 import gradio as gr
 
-def greet(name):
-    return f"Hello {name}! "
+def predict(*args):
+    return "OK"
 
 demo = gr.Interface(
-    fn=greet,
-    inputs="text",
+    fn=predict,
+    inputs=[],
     outputs="text",
-    title="Hello Space",
-    description="Gradio "
+    title="Churn Prediction"
 )
+
+app = demo.app
 
 if __name__ == "__main__":
     demo.launch()
