@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
-from src.app.main import app
+from app import app
+
 
 @pytest.mark.asyncio
 async def test_predict():
