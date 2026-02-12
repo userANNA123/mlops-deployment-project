@@ -60,3 +60,4 @@ tqdm==4.67.1
 gradio
 python-multipart
 huggingface_hub==0.24.7
+gradio==4.44.1
