@@ -1,7 +1,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
-from app import app
-
+from app import app  
 
 @pytest.mark.asyncio
 async def test_predict():
@@ -20,8 +19,4 @@ async def test_predict():
             }
         )
 
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text)   
-
     assert response.status_code == 200
-

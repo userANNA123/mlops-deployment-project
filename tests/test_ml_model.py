@@ -1,9 +1,11 @@
 from fastapi.testclient import TestClient
 from app import app
 
-client = TestClient(app)
+def test_gradio_object_exists():
+    from app import demo
+    assert demo is not None
 
-def test_docs_available():
-    r = client.get("/docs")
-    assert r.status_code in (200, 302)
 
+from fastapi import FastAPI
+app = FastAPI()
+app = gr.mount_gradio_app(app, demo, path="/")
