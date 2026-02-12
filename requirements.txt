@@ -57,3 +57,4 @@ shap==0.43.0
 # Extra utilities
 # -------------------------------
 tqdm==4.67.1
+gradio
