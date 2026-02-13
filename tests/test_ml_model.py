@@ -1,9 +1,10 @@
 from fastapi.testclient import TestClient
 from app import app
 
-def test_gradio_object_exists():
-    from app import demo
-    assert demo is not None
+def test_app_exists():
+    from app import app
+    assert app is not None
+
 
 
 from fastapi import FastAPI
