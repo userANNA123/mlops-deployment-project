@@ -11,32 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run tests
-      env:
-        PYTHONPATH: ${{ github.workspace }}/src
-      run: pytest
+          # Remove wrong "multipart" package if present (it breaks gradio/starlette)
+          pip uninstall -y multipart || true
 
-    - name: Build Docker image
-      run: docker build -t mlops-app .
-- name: Install dependencies
-  run: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-    #  Remove wrong "multipart" if present (it breaks gradio/starlette)
-    pip uninstall -y multipart || true
-    #  Ensure correct package is installed
-    pip install --force-reinstall "python-multipart==0.0.20"
+          # Ensure correct package is installed
+          pip install --force-reinstall "python-multipart==0.0.20"
+
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: pytest
+
+      - name: Build Docker image
+        run: docker build -t mlops-app .
