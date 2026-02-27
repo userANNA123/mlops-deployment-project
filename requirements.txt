@@ -39,3 +39,4 @@ huggingface_hub==0.24.7
 gradio==4.44.1
 
 evidently==0.4.39
+python-multipart==0.0.6
