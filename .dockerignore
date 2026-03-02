@@ -1,0 +1,33 @@
+# Git
+.git/
+.github/
+
+# Virtual env
+venv/
+.venv/
+
+# Python caches
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Local databases / artifacts
+*.db
+*.sqlite
+mlflow.db
+monitoring.db
+
+# Data & outputs
+data/
+data;C/
+monitoring_reports/
+flagged/
+
+# Notebooks / misc
+*.ipynb
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
