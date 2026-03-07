@@ -2,12 +2,12 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ dev, main ]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-          # Remove wrong "multipart" package if present (it breaks gradio/starlette)
+          # Remove wrong "multipart" package if present
           pip uninstall -y multipart || true
 
           # Ensure correct package is installed
@@ -34,6 +34,14 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: pytest
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Build Docker image
         run: docker build -t mlops-app .
