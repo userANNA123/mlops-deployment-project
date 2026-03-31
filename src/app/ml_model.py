@@ -12,8 +12,25 @@ MODEL_PATH = Path(__file__).resolve().parent / "models" / "model.joblib"
 # =========================
 # 1) Chargement du modèle AU NIVEAU GLOBAL
 # =========================
-#  Le modèle est chargé UNE SEULE FOIS quand le module est importé
 model = joblib.load(MODEL_PATH)
+
+
+def salary_category_from_value(value):
+    """
+    Version plus légère que qcut/pd.cut pour une seule ligne.
+    Adapte les seuils selon ton projet / ton entraînement.
+    """
+    if pd.isna(value):
+        return "low"
+
+    if value < 3000:
+        return "low"
+    elif value < 5000:
+        return "medium"
+    elif value < 8000:
+        return "high"
+    else:
+        return "very_high"
 
 
 # =========================
@@ -23,28 +40,18 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     df2 = df.copy()
 
     # 1) experience_to_age
+    age = df2["age"].replace(0, np.nan)
     df2["experience_to_age"] = (
-        df2["annee_experience_totale"] / df2["age"].replace(0, np.nan)
+        df2["annee_experience_totale"] / age
     ).replace([np.inf, -np.inf], np.nan)
 
     # 2) salary_category
-    try:
-        df2["salary_category"] = pd.qcut(
-            df2["revenu_mensuel"],
-            q=4,
-            labels=["low", "medium", "high", "very_high"],
-        )
-    except Exception:
-        df2["salary_category"] = pd.cut(
-            df2["revenu_mensuel"],
-            bins=4,
-            labels=["low", "medium", "high", "very_high"],
-            include_lowest=True,
-        )
+    df2["salary_category"] = df2["revenu_mensuel"].apply(salary_category_from_value)
 
     # 3) long_commute
-    med_dist = df2["distance_domicile_travail"].median()
-    df2["long_commute"] = (df2["distance_domicile_travail"] > med_dist).astype(int)
+    # بما أن التنبؤ غالبًا على صف واحد، median هنا = نفس القيمة
+    # إذا كنتِ تريدين منطقًا أفضل، استعملي seuil ثابت من التدريب
+    df2["long_commute"] = (df2["distance_domicile_travail"] > 15).astype(int)
 
     # 4) training_hours_per_year
     df2["training_hours_per_year"] = df2["nb_formations_suivies"].fillna(0) * 8
@@ -53,8 +60,13 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     freq = df2["frequence_deplacement"].map(FREQ_NUM_MAP).fillna(0)
     df2["work_life_balance"] = df2["nombre_heures_travaillees"] / (freq + 1)
 
-    # 6) One-hot encoding de frequence_deplacement
-    df2 = pd.get_dummies(df2, columns=["frequence_deplacement"], drop_first=False)
+    # 6) One-hot encoding manuel au lieu de get_dummies
+    df2["frequence_deplacement_Jamais"] = (df2["frequence_deplacement"] == "Jamais").astype(int)
+    df2["frequence_deplacement_Rarement"] = (df2["frequence_deplacement"] == "Rarement").astype(int)
+    df2["frequence_deplacement_Souvent"] = (df2["frequence_deplacement"] == "Souvent").astype(int)
+
+    # Optionnel: supprimer la colonne texte d'origine
+    df2 = df2.drop(columns=["frequence_deplacement"], errors="ignore")
 
     return df2
 
@@ -82,24 +94,15 @@ def predict_from_dict(data: dict) -> int:
     """
     data vient de PredictionRequest.model_dump()
     """
-
-    # On ne recharge plus le modèle ici
-    # On n'appelle plus load_model()
-    # On utilise le modèle global : model
-
-    # dict → DataFrame
     df = pd.DataFrame([data])
 
-    # features manuelles
     df_feat = make_features(df)
 
-    # alignement sur les colonnes vues par le modèle
     if hasattr(model, "feature_names_in_"):
-        X = df_feat.reindex(columns=model.feature_names_in_)
+        X = df_feat.reindex(columns=model.feature_names_in_, fill_value=0)
     else:
         X = df_feat
 
-    # remplacer NaN
     X = X.fillna(0)
 
     y_pred = model.predict(X)
